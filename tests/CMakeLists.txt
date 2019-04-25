@@ -20,3 +20,7 @@ add_test(NAME noncopyable_function COMMAND noncopyable_function)
 add_executable(cqueue cqueue.cpp)
 target_link_libraries(cqueue ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME cqueue COMMAND cqueue)
+
+add_executable(thread_pool thread_pool.cpp)
+target_link_libraries(thread_pool ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME thread_pool COMMAND thread_pool)
