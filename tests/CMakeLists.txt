@@ -9,5 +9,8 @@ add_definitions(-g -ggdb)
 
 add_executable(topn topn.cpp)
 target_link_libraries(topn)
-
 add_test(NAME topn COMMAND topn)
+
+add_executable(noncopyable_function noncopyable_function.cpp)
+target_link_libraries(noncopyable_function)
+add_test(NAME noncopyable_function COMMAND noncopyable_function)
