@@ -26,6 +26,7 @@ TEST_CASE("thread safe queue using mutex") {
         for (int i = 0; i < 1000; ++i) {
             cq.push(i);
         }
+        done = true;
     });
 
     if (t1.joinable()) {
