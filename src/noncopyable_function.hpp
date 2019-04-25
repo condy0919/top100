@@ -52,8 +52,7 @@ private:
         }
 
         static R call(const Self* f, Args... args) {
-            const auto fn = *access(f);
-            return fn(std::forward<Args>(args)...);
+            return  (*access(const_cast<Self*>(f)))(std::forward<Args>(args)...);
         }
 
         static void move(Self* from, Self* to) noexcept {
@@ -86,8 +85,7 @@ private:
         }
 
         static R call(const Self* f, Args... args) {
-            const auto fn = *access(f);
-            return fn(std::forward<Args>(args)...);
+            return (*access(const_cast<Self*>(f)))(std::forward<Args>(args)...);
         }
 
         static void move(Self* from, Self* to) noexcept {
