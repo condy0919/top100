@@ -122,7 +122,6 @@ void ExternalSorter::sort() {
         current_chunk_size *= 2;
     }
 
-    std::cout << "filename = " << filenames.size() << '\n';
     auto chunks = std::make_unique<Prefetched[]>(filenames.size());
     std::transform(filenames.begin(), filenames.end(), chunks.get(),
                    [](const std::string& name) {

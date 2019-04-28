@@ -6,6 +6,7 @@ add_definitions(-Wextra)
 add_definitions(-g -ggdb)
 #add_definitions(-fsanitize=address,undefined)
 
+find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(Threads REQUIRED)
 find_package(Git REQUIRED)
 
@@ -22,7 +23,6 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
 )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
 file(GLOB TOP100_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/counter.cpp
@@ -32,6 +32,7 @@ file(GLOB TOP100_SRC
 add_executable(top100 ${TOP100_SRC} ${CMAKE_CURRENT_BINARY_DIR}/version.hpp)
 target_link_libraries(top100
     ${CMAKE_THREAD_LIBS_INIT}
+    ${Boost_LIBRARIES}
     #asan
     #ubsan
 )
