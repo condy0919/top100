@@ -10,14 +10,12 @@ namespace po = boost::program_options;
 
 int main(int argc, char* argv[]) {
     std::string input_file;
-    std::string output_file;
 
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Produce help message")
         ("version,v", "Print version details")
         ("input,i", po::value<std::string>(&input_file), "Input file")
-        ("output,o", po::value<std::string>(&output_file), "Output file")
         ;
 
     po::variables_map vm;
@@ -33,12 +31,11 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    top100::ExternalSorter sorter{std::ifstream(input_file), std::ofstream(output_file)};
-    sorter.sort();
+    top100::ExternalSorter sorter{std::ifstream(input_file)};
+    top100::Counter counter;
 
-    top100::Counter counter{std::ifstream(output_file)};
-    counter.count();
-
+    sorter.sort([&](std::string s) { counter.count(std::move(s)); });
+    counter.flush();
     for (const auto& r : counter.getResult()) {
         std::cout << r.first << ' ' << r.second << '\n';
     }

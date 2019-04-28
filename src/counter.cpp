@@ -2,30 +2,22 @@
 
 namespace top100 {
 
-void Counter::count() {
-    std::size_t cnt = 0;
-    std::string last;
-
-    while (true) {
-        const auto& [avail, s] = prefetched_.get();
-        if (!avail) {
-            break;
+void Counter::count(std::string s) {
+    if (s != last_) {
+        if (cnt_) {
+            top100_.push(std::make_pair(cnt_, std::move(last_)));
         }
 
-        if (s != last) {
-            if (cnt) {
-                top100_.push(std::make_pair(cnt, std::move(last)));
-            }
-
-            cnt = 1;
-            last = s;
-        } else {
-            ++cnt;
-        }
+        cnt_ = 1;
+        last_ = s;
+    } else {
+        ++cnt_;
     }
+}
 
-    if (cnt) {
-        top100_.push(std::make_pair(cnt, std::move(last)));
+void Counter::flush() {
+    if (cnt_) {
+        top100_.push(std::make_pair(cnt_, std::move(last_)));
     }
 }
 

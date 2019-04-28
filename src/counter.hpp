@@ -10,16 +10,21 @@ namespace top100 {
 
 class Counter {
 public:
-    Counter(std::ifstream ifs) noexcept : prefetched_(std::move(ifs)) {}
+    Counter() = default;
 
-    void count();
+    void count(std::string s);
+
+    void flush();
 
     std::vector<std::pair<std::size_t, std::string>> getResult();
 
 private:
     static const std::size_t N = 100;
 
-    Prefetched prefetched_;
+    std::size_t cnt_ = 0;
+
+    std::string last_;
+
     Top<std::pair<std::size_t, std::string>, N> top100_;
 };
 
