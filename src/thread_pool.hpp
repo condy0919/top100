@@ -64,7 +64,7 @@ private:
     std::atomic_bool done_;
     std::atomic_size_t idle_;
     std::vector<std::thread> workers_;
-    CQueue<NoncopyableFunction<void()>> tasks_;
+    ConcurrentQueue<NoncopyableFunction<void()>> tasks_;
 };
 
 }

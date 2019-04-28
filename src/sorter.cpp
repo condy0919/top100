@@ -9,27 +9,24 @@ namespace top100 {
 
 void ExternalSorter::sort() {
     const std::size_t MAX_MEM = 1 << 30;   // 1G
-    const std::size_t MAX_SIZE = 20 << 20; // 10M
+    const std::size_t BASE_OBJ_SIZE = 20 << 20; // 20M
     const std::size_t PARALLEL_WORKERS = 8;
-    static_assert((PARALLEL_WORKERS & (PARALLEL_WORKERS - 1)) == 0,
-                  "PARALLEL_WORKERS must be power of 2");
-    static_assert(PARALLEL_WORKERS * MAX_SIZE < (1 << 30),
-                  "memory usage large than 1G");
+    static_assert((PARALLEL_WORKERS & (PARALLEL_WORKERS - 1)) == 0, "PARALLEL_WORKERS must be power of 2");
+    static_assert(PARALLEL_WORKERS * BASE_OBJ_SIZE < (1 << 30), "memory usage large than 1G");
 
     const char* tmp_file_prefix = "tmp_file_prefix_";
 
-    std::vector<std::string> filenames;
 
+    // Split file into pieces, then sort
+    std::vector<std::string> filenames;
     std::size_t idx = 0;
     std::string line;
     while (ifs_) {
-        std::array<std::future<std::vector<std::string>>, PARALLEL_WORKERS>
-            futures;
-
+        std::array<std::future<std::vector<std::string>>, PARALLEL_WORKERS> futures;
         for (std::size_t i = 0; i < PARALLEL_WORKERS; ++i) {
             std::size_t sz = 0;
             std::vector<std::string> xs;
-            while (sz < MAX_SIZE && std::getline(ifs_, line)) {
+            while (sz < BASE_OBJ_SIZE && std::getline(ifs_, line)) {
                 line.shrink_to_fit();
 
                 sz += line.size();
@@ -44,16 +41,8 @@ void ExternalSorter::sort() {
         }
 
         std::vector<std::vector<std::string>> results;
-        for (std::size_t i = 0; i < PARALLEL_WORKERS; i += 2) {
-            std::vector<std::string> result;
-
-            auto x0 = futures[i].get();
-            auto x1 = futures[i + 1].get();
-            std::merge(x0.begin(), x0.end(), x1.begin(), x1.end(),
-                       std::back_inserter(result));
-
-            result.shrink_to_fit();
-            results.push_back(std::move(result));
+        for (std::size_t i = 0; i < PARALLEL_WORKERS; ++i) {
+            results.push_back(futures[i].get());
         }
 
         while (results.size() > 1) {
@@ -84,7 +73,9 @@ void ExternalSorter::sort() {
         filenames.push_back(buf);
     }
 
-    std::size_t current_chunk_size = MAX_SIZE * 2;
+    // Let pieces evelove into chunks up to 160M
+    // Merging two chunks of 320M breaks the 1G MEMORY constraint
+    std::size_t current_chunk_size = BASE_OBJ_SIZE * 2;
     while (current_chunk_size < MAX_MEM / 4) {
         std::vector<std::string> fnames;
 
@@ -100,8 +91,15 @@ void ExternalSorter::sort() {
             std::snprintf(buf, sizeof(buf), "%s%zu", tmp_file_prefix, idx++);
             std::ofstream ofs(buf);
 
-            auto xs0 = getContent(std::ifstream(fn0)),
-                 xs1 = getContent(std::ifstream(fn1));
+            auto fut0 = thread_pool_.submit([&, name = std::move(fn0)]() mutable {
+                return getContent(std::ifstream(std::move(name)));
+            });
+
+            auto fut1 = thread_pool_.submit([&, name = std::move(fn1)]() mutable {
+                return getContent(std::ifstream(std::move(name)));
+            });
+
+            auto xs0 = fut0.get(), xs1 = fut1.get();
 
             std::vector<std::string> result;
             std::merge(xs0.begin(), xs0.end(), xs1.begin(), xs1.end(),
@@ -122,6 +120,7 @@ void ExternalSorter::sort() {
         current_chunk_size *= 2;
     }
 
+    // Merge all chunks
     auto chunks = std::make_unique<Prefetched[]>(filenames.size());
     std::transform(filenames.begin(), filenames.end(), chunks.get(),
                    [](const std::string& name) {

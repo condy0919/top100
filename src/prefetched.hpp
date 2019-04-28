@@ -13,9 +13,6 @@ public:
     Prefetched() = default;
     Prefetched(std::ifstream ifs) noexcept : ifs_(std::move(ifs)) {}
 
-    Prefetched(const Prefetched&) = delete;
-    Prefetched& operator=(const Prefetched&) = delete;
-
     Prefetched(Prefetched&& rhs) noexcept
         : ifs_(std::move(rhs.ifs_)), fetched_(std::move(rhs.fetched_)) {}
 
@@ -26,8 +23,11 @@ public:
         return *this;
     }
 
+    Prefetched(const Prefetched&) = delete;
+    Prefetched& operator=(const Prefetched&) = delete;
+
     std::tuple<bool, const std::string&> peak() {
-        const std::size_t PREFETCH_LINES = 1000;
+        const std::size_t PREFETCH_LINES = 10000;
 
         if (fetched_.empty()) {
             std::string line;
@@ -50,7 +50,7 @@ public:
     }
 
     std::tuple<bool, std::string> get() {
-        const std::size_t PREFETCH_LINES = 1000;
+        const std::size_t PREFETCH_LINES = 10000;
 
         if (fetched_.empty()) {
             std::string line;
