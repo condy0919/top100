@@ -1,8 +1,10 @@
-add_definitions(-std=c++2a)
+add_definitions(-std=c++17)
+add_definitions(-O2)
 add_definitions(-pipe)
 add_definitions(-Wall)
 add_definitions(-Wextra)
 add_definitions(-g -ggdb)
+#add_definitions(-fsanitize=address,undefined)
 
 find_package(Threads REQUIRED)
 find_package(Git REQUIRED)
@@ -23,9 +25,13 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB TOP100_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/counter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/sorter.cpp
 )
 
 add_executable(top100 ${TOP100_SRC} ${CMAKE_CURRENT_BINARY_DIR}/version.hpp)
 target_link_libraries(top100
     ${CMAKE_THREAD_LIBS_INIT}
+    #asan
+    #ubsan
 )

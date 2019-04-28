@@ -20,12 +20,16 @@ public:
             nworker = std::thread::hardware_concurrency();
         }
 
+        idle_ = nworker;
+
         for (std::size_t i = 0; i < nworker; ++i) {
             workers_.emplace_back([this]() {
                 NoncopyableFunction<void()> task;
                 while (!done_) {
                     if (tasks_.tryPop(task)) {
+                        --idle_;
                         task();
+                        ++idle_;
                     } else {
                         std::this_thread::yield();
                     }
@@ -43,6 +47,10 @@ public:
         }
     }
 
+    bool avail() noexcept {
+        return idle_ > 0;
+    }
+
     template <typename F, typename R = std::result_of_t<F()>>
     std::future<R> submit(F f) {
         std::packaged_task<R()> task(std::move(f));
@@ -54,6 +62,7 @@ public:
 
 private:
     std::atomic_bool done_;
+    std::atomic_size_t idle_;
     std::vector<std::thread> workers_;
     CQueue<NoncopyableFunction<void()>> tasks_;
 };
