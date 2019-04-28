@@ -4,12 +4,12 @@
 #include <thread>
 
 TEST_CASE("thread safe queue using mutex") {
-    using top100::CQueue;
+    using top100::ConcurrentQueue;
 
     std::vector<int> xs;
 
     bool done = false;
-    CQueue<int> cq;
+    ConcurrentQueue<int> cq;
 
     std::thread t1([&]() {
         int v = -1;

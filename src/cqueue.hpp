@@ -1,5 +1,5 @@
-#ifndef TOP100_CQUEUE_HPP_
-#define TOP100_CQUEUE_HPP_
+#ifndef TOP100_CONCURRENTQUEUE_HPP_
+#define TOP100_CONCURRENTQUEUE_HPP_
 
 #include <queue>
 #include <mutex>
@@ -9,12 +9,12 @@
 namespace top100 {
 
 template <typename T>
-class CQueue {
+class ConcurrentQueue {
 public:
-    CQueue() = default;
+    ConcurrentQueue() = default;
 
-    CQueue(const CQueue&) = delete;
-    CQueue& operator=(const CQueue&) = delete;
+    ConcurrentQueue(const ConcurrentQueue&) = delete;
+    ConcurrentQueue& operator=(const ConcurrentQueue&) = delete;
 
     void push(const T& v) {
         std::lock_guard<std::mutex> g(mtx_);
