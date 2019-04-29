@@ -23,6 +23,8 @@ void Counter::flush() {
 
 std::vector<std::pair<std::size_t, std::string>> Counter::getResult() {
     std::vector<std::pair<std::size_t, std::string>> ret;
+    ret.reserve(top100_.size());
+
     while (!top100_.empty()) {
         ret.push_back(std::move(top100_.top()));
         top100_.pop();

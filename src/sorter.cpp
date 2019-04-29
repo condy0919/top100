@@ -9,6 +9,7 @@ std::vector<std::string> ExternalSorter::getContent(std::ifstream ifs) {
         line.shrink_to_fit();
         ret.push_back(std::move(line));
     }
+    ret.shrink_to_fit();
 
     return ret;
 }

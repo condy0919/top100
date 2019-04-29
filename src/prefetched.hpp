@@ -27,17 +27,7 @@ public:
     Prefetched& operator=(const Prefetched&) = delete;
 
     std::tuple<bool, const std::string&> peak() {
-        const std::size_t PREFETCH_LINES = 10000;
-
-        if (fetched_.empty()) {
-            std::string line;
-            for (std::size_t i = 0; i < PREFETCH_LINES && std::getline(ifs_, line); ++i) {
-                line.shrink_to_fit();
-
-                fetched_.push(std::move(line));
-            }
-        }
-
+        fetch();
         if (fetched_.empty()) {
             return std::make_tuple(false, "");
         }
@@ -45,13 +35,20 @@ public:
         return std::make_tuple(true, fetched_.front());
     }
 
-    void ignore() {
+    std::tuple<bool, std::string> get() {
+        fetch();
+        if (fetched_.empty()) {
+            return std::make_tuple(false, "");
+        }
+
+        std::string ret = std::move(fetched_.front());
         fetched_.pop();
+        return std::make_tuple(true, std::move(ret));
     }
 
-    std::tuple<bool, std::string> get() {
-        const std::size_t PREFETCH_LINES = 10000;
-
+private:
+    void fetch() {
+        const std::size_t PREFETCH_LINES = 100;
         if (fetched_.empty()) {
             std::string line;
             for (std::size_t i = 0; i < PREFETCH_LINES && std::getline(ifs_, line); ++i) {
@@ -60,14 +57,6 @@ public:
                 fetched_.push(std::move(line));
             }
         }
-
-        if (fetched_.empty()) {
-            return std::make_tuple(false, "");
-        }
-
-        std::string ret = std::move(fetched_.front());
-        fetched_.pop();
-        return std::make_tuple(true, std::move(ret));
     }
 
 private:

@@ -1,6 +1,7 @@
 #ifndef TOP100_SORTER_HPP_
 #define TOP100_SORTER_HPP_
 
+#include "log.hpp"
 #include "thread_pool.hpp"
 #include "prefetched.hpp"
 #include <fstream>
@@ -19,7 +20,7 @@ public:
     template <typename Callback>
     void sort(Callback cb) {
         const std::size_t MAX_MEM = 1 << 30;         // 1G
-        const std::size_t BASE_OBJ_SIZE = 20 << 20;  // 20M
+        const std::size_t BASE_OBJ_SIZE = 10 << 20;  // 10M
         const std::size_t PARALLEL_WORKERS = 8;
         static_assert((PARALLEL_WORKERS & (PARALLEL_WORKERS - 1)) == 0, "PARALLEL_WORKERS must be power of 2");
         static_assert(PARALLEL_WORKERS * BASE_OBJ_SIZE < (1 << 30), "memory usage large than 1G");
@@ -28,6 +29,8 @@ public:
 
         // Split file into pieces, then sort
         std::vector<std::string> filenames;
+        filenames.reserve(1024);
+
         std::size_t idx = 0;
         std::string line;
         while (ifs_) {
@@ -59,14 +62,15 @@ public:
             while (results.size() > 1) {
                 std::vector<std::vector<std::string>> rs;
                 for (std::size_t i = 0; i < results.size(); i += 2) {
-                    std::vector<std::string> r;
-
                     auto& x0 = results[i];
                     auto& x1 = results[i + 1];
+
+                    std::vector<std::string> r;
+                    r.reserve(x0.size() + x1.size());
+
                     std::merge(x0.begin(), x0.end(), x1.begin(), x1.end(),
                                std::back_inserter(r));
 
-                    r.shrink_to_fit();
                     rs.push_back(std::move(r));
                 }
 
@@ -84,6 +88,8 @@ public:
             filenames.push_back(buf);
         }
 
+        filenames.shrink_to_fit();
+
         // Let pieces evelove into chunks up to 160M
         // Merging two chunks of 320M breaks the 1G MEMORY constraint
         std::size_t current_chunk_size = BASE_OBJ_SIZE * 2;
@@ -96,8 +102,8 @@ public:
 
             for (std::size_t i = filenames.size() % 2; i < filenames.size();
                  i += 2) {
-                const std::string& fn0 = filenames[i];
-                const std::string& fn1 = filenames[i + 1];
+                std::string fn0 = filenames[i];
+                std::string fn1 = filenames[i + 1];
 
                 char buf[32];
                 std::snprintf(buf, sizeof(buf), "%s%zu", tmp_file_prefix,
@@ -131,6 +137,7 @@ public:
                 std::remove(fn1.c_str());
             }
 
+            fnames.shrink_to_fit();
             fnames.swap(filenames);
             current_chunk_size *= 2;
         }
@@ -164,7 +171,7 @@ public:
         while (!chunks_pq.empty()) {
             auto c = chunks_pq.top();
 
-            const auto [avail, s] = c.prefetched_->get();
+            auto [avail, s] = c.prefetched_->get();
             if (!avail) {
                 chunks_pq.pop();
                 continue;
