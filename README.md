@@ -12,13 +12,16 @@ This will print the top 100 most frequently occurring urls with count.
 Output:
 
 > 1 https://wwww.google.com
-2 https://github.com
+>
+> 2 https://github.com
 
 # Command line options
 
 > -h [ --help ]         Produce help message
--v [ --version ]      Print version details
--i [ --input ] arg    Input file
+>
+> -v [ --version ]      Print version details
+>
+> -i [ --input ] arg    Input file
 
 # Customization
 
