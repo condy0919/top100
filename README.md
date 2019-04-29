@@ -1,7 +1,7 @@
 top100
 ========
 
-`top100` is a tiny external sorting library
+`top100` is a tiny external sorting library under 1G memory usage
 
 # Basic
 
