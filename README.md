@@ -64,6 +64,5 @@ DIY
 
 # TODO
 
-[ ] using aio to write tmp file
-
-[ ] improve CPU utilization rate
+- [ ] using aio to write tmp file
+- [ ] improve CPU utilization rate
